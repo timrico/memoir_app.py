@@ -206,6 +206,11 @@ def save_response(date, answer):
     if date not in st.session_state.responses:
         st.session_state.responses[date] = {}
     
+    # Get today's question if this is a new response
+    if "question" not in st.session_state.responses[date]:
+        _, question = get_todays_question()
+        st.session_state.responses[date]["question"] = question
+    
     st.session_state.responses[date]["answer"] = answer
     st.session_state.responses[date]["status"] = "answered"
     
