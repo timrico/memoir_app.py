@@ -3,7 +3,6 @@ import pandas as pd
 import random
 from datetime import datetime, timedelta
 import json
-import openai
 from collections import defaultdict
 import plotly.express as px
 import plotly.graph_objects as go
