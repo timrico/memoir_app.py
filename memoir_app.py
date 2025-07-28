@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import random
 from datetime import datetime, timedelta
+import json
 from collections import defaultdict
 
 # Initialize session state
@@ -15,6 +16,10 @@ if 'questions' not in st.session_state:
     st.session_state.questions = []
 if 'search_results' not in st.session_state:
     st.session_state.search_results = []
+if 'editing_date' not in st.session_state:
+    st.session_state.editing_date = None
+if 'view_date' not in st.session_state:
+    st.session_state.view_date = None
 
 # Sample questions database
 sample_questions = [
@@ -170,25 +175,40 @@ sample_responses = {
         "question": "What is your earliest childhood memory?",
         "answer": "Playing in the backyard with my sister. We had a big oak tree we used to climb.",
         "depth_prompt": "Can you describe the tree in more detail? What made it special to you?",
-        "status": "answered"
+        "status": "answered",
+        "timestamp": "2023-01-01 10:30:00"
     },
     "2023-01-02": {
         "question": "Who was your best friend growing up and why?",
         "answer": "Tommy. We did everything together - fishing, playing baseball, exploring the woods.",
         "depth_prompt": "What was the most memorable adventure you had with Tommy?",
-        "status": "answered"
+        "status": "answered",
+        "timestamp": "2023-01-02 14:15:00"
     },
     "2023-01-03": {
         "question": "What was your first job and what did you learn from it?",
         "answer": "I worked at the local grocery store bagging groceries. I learned the value of hard work.",
         "depth_prompt": "What was the most challenging part of that job?",
-        "status": "answered"
+        "status": "answered",
+        "timestamp": "2023-01-03 09:45:00"
     }
 }
 
 # Initialize responses if not already done
 if not st.session_state.responses:
     st.session_state.responses = sample_responses
+
+def get_question_for_date(date_str):
+    """Get question for a specific date"""
+    try:
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        day_of_year = date_obj.timetuple().tm_yday
+        question_index = (day_of_year - 1) % len(st.session_state.questions)
+        return st.session_state.questions[question_index]
+    except ValueError:
+        # Fallback to today's question
+        _, question = get_todays_question()
+        return question
 
 def get_todays_question():
     """Get today's question based on the date"""
@@ -206,13 +226,13 @@ def save_response(date, answer):
     if date not in st.session_state.responses:
         st.session_state.responses[date] = {}
     
-    # Get today's question if this is a new response
-    if "question" not in st.session_state.responses[date]:
-        _, question = get_todays_question()
-        st.session_state.responses[date]["question"] = question
+    # Get question for this date
+    question = get_question_for_date(date)
+    st.session_state.responses[date]["question"] = question
     
     st.session_state.responses[date]["answer"] = answer
     st.session_state.responses[date]["status"] = "answered"
+    st.session_state.responses[date]["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     # Add depth prompt if not already there
     if "depth_prompt" not in st.session_state.responses[date]:
@@ -238,7 +258,7 @@ def search_responses(query):
     query_lower = query.lower()
     
     for date, response in st.session_state.responses.items():
-        if "answer" in response:
+        if "answer" in response and "question" in response:
             answer_lower = response["answer"].lower()
             question_lower = response["question"].lower()
             
@@ -250,9 +270,12 @@ def search_responses(query):
                 results.append({
                     "date": date,
                     "question": response["question"],
-                    "answer": response["answer"]
+                    "answer": response["answer"],
+                    "timestamp": response.get("timestamp", "")
                 })
     
+    # Sort by date (newest first)
+    results.sort(key=lambda x: x["date"], reverse=True)
     return results
 
 def get_response_stats():
@@ -262,6 +285,25 @@ def get_response_stats():
     percentage = (answered_count / total_questions) * 100 if total_questions > 0 else 0
     
     return answered_count, percentage
+
+def export_responses():
+    """Export all responses as JSON"""
+    return json.dumps(st.session_state.responses, indent=2)
+
+def get_monthly_stats():
+    """Get monthly response statistics"""
+    monthly_data = {}
+    for date_str, response in st.session_state.responses.items():
+        if response.get("status") == "answered":
+            try:
+                date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+                month_key = date_obj.strftime("%Y-%m")
+                if month_key not in monthly_
+                    monthly_data[month_key] = 0
+                monthly_data[month_key] += 1
+            except ValueError:
+                pass  # Skip invalid dates
+    return monthly_data
 
 # Main app
 st.set_page_config(page_title="52 Weeks Memoir", page_icon="📖", layout="wide")
@@ -278,57 +320,129 @@ if not st.session_state.user_type:
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("👨 Father (Respond to Questions)"):
-            st.session_state.user_type = "father"
-            st.session_state.current_user = "father"
+        if st.button("👨 Parent (Respond to Questions)", use_container_width=True):
+            st.session_state.user_type = "parent"
+            st.session_state.current_user = "parent"
             st.rerun()
     
     with col2:
-        if st.button("👨‍👦 Son (Review & Guide Responses)"):
-            st.session_state.user_type = "son"
-            st.session_state.current_user = "son"
+        if st.button("👨‍👦 Child (Review & Guide Responses)", use_container_width=True):
+            st.session_state.user_type = "child"
+            st.session_state.current_user = "child"
             st.rerun()
     
     st.info("Select your role to get started")
+    
+    # Show some sample responses to demonstrate functionality
+    st.markdown("### Sample Responses")
+    sample_df = pd.DataFrame([
+        {"Date": "2023-01-01", "Question": "What is your earliest childhood memory?", "Answer": "Playing in the backyard with my sister..."},
+        {"Date": "2023-01-02", "Question": "Who was your best friend growing up?", "Answer": "Tommy. We did everything together..."},
+        {"Date": "2023-01-03", "Question": "What was your first job?", "Answer": "I worked at the local grocery store..."}
+    ])
+    st.dataframe(sample_df, use_container_width=True, hide_index=True)
 
-# Father's view
-elif st.session_state.user_type == "father":
-    st.subheader("Today's Question")
+# Parent's view
+elif st.session_state.user_type == "parent":
+    st.subheader("Answer Questions")
     
-    today, question = get_todays_question()
+    # Date navigation
+    col1, col2, col3 = st.columns([1, 2, 1])
     
-    # Display today's question
-    st.markdown(f"### 📅 {today}")
+    with col1:
+        if st.button("◀ Previous Day"):
+            if st.session_state.view_date:
+                current_date = datetime.strptime(st.session_state.view_date, "%Y-%m-%d")
+                new_date = current_date - timedelta(days=1)
+                st.session_state.view_date = new_date.strftime("%Y-%m-%d")
+            else:
+                current_date = datetime.now()
+                new_date = current_date - timedelta(days=1)
+                st.session_state.view_date = new_date.strftime("%Y-%m-%d")
+            st.rerun()
+    
+    with col2:
+        if st.session_state.view_date:
+            selected_date = st.date_input("Select date:", datetime.strptime(st.session_state.view_date, "%Y-%m-%d"))
+        else:
+            selected_date = st.date_input("Select date:", datetime.now())
+        
+        if st.session_state.view_date != selected_date.strftime("%Y-%m-%d"):
+            st.session_state.view_date = selected_date.strftime("%Y-%m-%d")
+            st.rerun()
+    
+    with col3:
+        if st.button("Next Day ▶"):
+            if st.session_state.view_date:
+                current_date = datetime.strptime(st.session_state.view_date, "%Y-%m-%d")
+                new_date = current_date + timedelta(days=1)
+                st.session_state.view_date = new_date.strftime("%Y-%m-%d")
+            else:
+                current_date = datetime.now()
+                new_date = current_date + timedelta(days=1)
+                st.session_state.view_date = new_date.strftime("%Y-%m-%d")
+            st.rerun()
+    
+    # Display question for selected date
+    if st.session_state.view_date:
+        date_str = st.session_state.view_date
+        question = get_question_for_date(date_str)
+    else:
+        date_str, question = get_todays_question()
+    
+    st.markdown(f"### 📅 {date_str}")
     st.markdown(f"#### {question}")
     
     # Check if already answered
-    if today in st.session_state.responses and st.session_state.responses[today].get("status") == "answered":
-        st.success("✅ You've already answered today's question!")
-        st.markdown(f"**Your response:** {st.session_state.responses[today]['answer']}")
+    if date_str in st.session_state.responses and st.session_state.responses[date_str].get("status") == "answered":
+        st.success("✅ You've already answered this question!")
+        st.markdown(f"**Your response:** {st.session_state.responses[date_str]['answer']}")
         
-        if st.button("📝 Edit Response"):
-            st.session_state.responses[today]["status"] = "editing"
-            st.rerun()
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("📝 Edit Response"):
+                st.session_state.editing_date = date_str
+                st.rerun()
     else:
         # Show response form
         with st.form("response_form"):
             answer = st.text_area("Your response:", height=200, 
-                                value=st.session_state.responses.get(today, {}).get("answer", ""))
+                                value=st.session_state.responses.get(date_str, {}).get("answer", ""))
             submitted = st.form_submit_button("Save Response")
             
             if submitted:
-                save_response(today, answer)
+                save_response(date_str, answer)
                 st.success("Response saved!")
+                st.rerun()
+    
+    # Editing existing response
+    if st.session_state.editing_date:
+        st.markdown("---")
+        st.subheader(f"Editing Response for {st.session_state.editing_date}")
+        edit_response = st.session_state.responses[st.session_state.editing_date]
+        st.markdown(f"**Question:** {edit_response['question']}")
+        
+        with st.form("edit_form"):
+            edited_answer = st.text_area("Your response:", height=200, 
+                                       value=edit_response.get("answer", ""))
+            edit_submitted = st.form_submit_button("Update Response")
+            
+            if edit_submitted:
+                save_response(st.session_state.editing_date, edited_answer)
+                st.success("Response updated!")
+                st.session_state.editing_date = None
                 st.rerun()
     
     # Navigation
     st.markdown("---")
     if st.button("⬅️ Back to Role Selection"):
         st.session_state.user_type = None
+        st.session_state.editing_date = None
+        st.session_state.view_date = None
         st.rerun()
 
-# Son's view
-elif st.session_state.user_type == "son":
+# Child's view
+elif st.session_state.user_type == "child":
     st.subheader("Review & Guide Responses")
     
     # Stats
@@ -341,68 +455,128 @@ elif st.session_state.user_type == "son":
     # Progress bar
     st.progress(percentage / 100)
     
-    # Search functionality
-    st.markdown("### 🔍 Search Responses")
-    search_query = st.text_input("Search by keyword or phrase:")
+    # Tabs for different views
+    tab1, tab2, tab3, tab4 = st.tabs(["🔍 Search", "📚 Recent", "📊 Stats", "💾 Export"])
     
-    if search_query:
-        st.session_state.search_results = search_responses(search_query)
-        st.markdown(f"### Search Results ({len(st.session_state.search_results)} found)")
+    with tab1:
+        st.markdown("### 🔍 Search Responses")
+        search_query = st.text_input("Search by keyword or phrase:")
         
-        for result in st.session_state.search_results:
-            with st.expander(f"**{result['date']}**: {result['question'][:50]}..."):
-                st.markdown(f"**Question:** {result['question']}")
-                st.markdown(f"**Answer:** {result['answer']}")
+        if search_query:
+            st.session_state.search_results = search_responses(search_query)
+            st.markdown(f"### Search Results ({len(st.session_state.search_results)} found)")
+            
+            for result in st.session_state.search_results:
+                with st.expander(f"**{result['date']}**: {result['question'][:50]}..."):
+                    st.markdown(f"**Question:** {result['question']}")
+                    st.markdown(f"**Answer:** {result['answer']}")
+                    if result['timestamp']:
+                        st.caption(f"Answered: {result['timestamp']}")
+        else:
+            st.info("Enter a search term to find specific responses")
     
-    # Recent responses
-    st.markdown("### 📚 Recent Responses")
-    
-    # Convert responses to DataFrame for easier handling
-    df_data = []
-    for date, response in st.session_state.responses.items():
-        if response.get("status") == "answered":
-            df_data.append({
-                "Date": date,
-                "Question": response["question"],
-                "Answer": response["answer"],
-                "Depth Prompt": response.get("depth_prompt", "")
-            })
-    
-    if df_data:
-        df = pd.DataFrame(df_data)
-        df = df.sort_values("Date", ascending=False)
+    with tab2:
+        st.markdown("### 📚 Recent Responses")
         
-        # Show recent responses
-        for i, row in df.head(10).iterrows():
-            with st.expander(f"**{row['Date']}**: {row['Question'][:60]}..."):
-                st.markdown(f"**Question:** {row['Question']}")
-                st.markdown(f"**Answer:** {row['Answer']}")
-                
-                # Depth prompt section
-                st.markdown("**Suggested follow-up:**")
-                st.info(row['Depth Prompt'])
-                
-                # Send prompt button (mock)
-                if st.button("📤 Send Depth Prompt", key=f"send_{row['Date']}"):
-                    st.success(f"Depth prompt sent to father for {row['Date']}")
-    else:
-        st.info("No responses yet. Encourage your father to start answering questions!")
-    
-    # Visualization
-    st.markdown("### 📊 Response Activity")
-    
-    # Create a simple timeline of responses
-    if df_data:
-        df_viz = pd.DataFrame(df_data)
-        df_viz['Date'] = pd.to_datetime(df_viz['Date'])
-        df_viz['Month'] = df_viz['Date'].dt.to_period('M')
-        monthly_counts = df_viz.groupby('Month').size().reset_index(name='Count')
-        monthly_counts['Month'] = monthly_counts['Month'].astype(str)
+        # Convert responses to DataFrame for easier handling
+        df_data = []
+        for date, response in st.session_state.responses.items():
+            if response.get("status") == "answered":
+                df_data.append({
+                    "Date": date,
+                    "Question": response["question"][:60] + "..." if len(response["question"]) > 60 else response["question"],
+                    "Answer": response["answer"][:100] + "..." if len(response["answer"]) > 100 else response["answer"],
+                    "Depth Prompt": response.get("depth_prompt", ""),
+                    "Timestamp": response.get("timestamp", "")
+                })
         
-        # Simple text-based visualization
-        st.markdown("**Responses per Month:**")
-        for _, row in monthly_counts.iterrows():
-            st.text(f"{row['Month']}: {row['Count']} responses")
+        if df_data:
+            df = pd.DataFrame(df_data)
+            df = df.sort_values("Date", ascending=False)
+            
+            # Show recent responses
+            for i, row in df.head(15).iterrows():
+                with st.expander(f"**{row['Date']}**: {row['Question']}"):
+                    st.markdown(f"**Question:** {st.session_state.responses[row['Date']]['question']}")
+                    st.markdown(f"**Answer:** {st.session_state.responses[row['Date']]['answer']}")
+                    
+                    # Depth prompt section
+                    if row['Depth Prompt']:
+                        st.markdown("**Suggested follow-up:**")
+                        st.info(row['Depth Prompt'])
+                    
+                    # Send prompt button (mock)
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.caption(f"Answered: {row['Timestamp']}")
+                    with col2:
+                        if st.button("📤 Send Depth Prompt", key=f"send_{row['Date']}"):
+                            st.success(f"Depth prompt sent to parent for {row['Date']}")
+        else:
+            st.info("No responses yet. Encourage your parent to start answering questions!")
+    
+    with tab3:
+        st.markdown("### 📊 Response Statistics")
+        
+        # Monthly activity
+        monthly_stats = get_monthly_stats()
+        if monthly_stats:
+            st.markdown("**Monthly Activity:**")
+            monthly_df = pd.DataFrame(list(monthly_stats.items()), columns=["Month", "Responses"])
+            monthly_df = monthly_df.sort_values("Month")
+            st.bar_chart(monthly_df.set_index("Month"))
+            
+            # Weekly trend (last 8 weeks)
+            st.markdown("**Recent Weekly Activity:**")
+            weekly_data = {}
+            for date_str in st.session_state.responses.keys():
+                if st.session_state.responses[date_str].get("status") == "answered":
+                    try:
+                        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+                        # Get start of week (Monday)
+                        week_start = date_obj - timedelta(days=date_obj.weekday())
+                        week_key = week_start.strftime("%Y-%m-%d")
+                        if week_key not in weekly_
+                            weekly_data[week_key] = 0
+                        weekly_data[week_key] += 1
+                    except ValueError:
+                        pass
+            
+            if weekly_
+                weekly_df = pd.DataFrame(list(weekly_data.items()), columns=["Week", "Responses"])
+                weekly_df = weekly_df.sort_values("Week").tail(8)
+                st.line_chart(weekly_df.set_index("Week"))
+        else:
+            st.info("No response data available for statistics")
+    
+    with tab4:
+        st.markdown("### 💾 Export Data")
+        st.markdown("Download all responses as a JSON file:")
+        
+        # Create download button
+        json_data = export_responses()
+        st.download_button(
+            label="📥 Download All Responses (JSON)",
+            data=json_data,
+            file_name="memoir_responses.json",
+            mime="application/json"
+        )
+        
+        st.markdown("### 📋 Response Summary")
+        if st.session_state.responses:
+            total_words = sum(len(response.get("answer", "").split()) 
+                            for response in st.session_state.responses.values() 
+                            if response.get("status") == "answered")
+            st.metric("Total Words Written", f"{total_words:,}")
+            
+            # Show sample of responses
+            st.markdown("**Sample Responses:**")
+            sample_responses_list = list(st.session_state.responses.items())
+            for date, response in sample_responses_list[:5]:
+                if response.get("status") == "answered":
+                    st.markdown(f"**{date}**: {response['question'][:50]}...")
+        else:
+            st.info("No responses to export yet")
     
     # Navigation
     st.markdown("---")
