@@ -367,7 +367,7 @@ elif st.session_state.user_type == "son":
                 "Depth Prompt": response.get("depth_prompt", "")
             })
     
-    if df_
+    if df_data:
         df = pd.DataFrame(df_data)
         df = df.sort_values("Date", ascending=False)
         
