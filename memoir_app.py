@@ -17,102 +17,120 @@ if 'editing_week' not in st.session_state:
     st.session_state.editing_week = None
 if 'view_week' not in st.session_state:
     st.session_state.view_week = None
+if 'current_question_index' not in st.session_state:
+    st.session_state.current_question_index = 0
+if 'skipped_questions' not in st.session_state:
+    st.session_state.skipped_questions = {}
+if 'requested_new_questions' not in st.session_state:
+    st.session_state.requested_new_questions = {}
 
-# 52 Week Themed Questions - Building Progressively
+# 52 Week Themes
 week_themes = [
-    # Foundation & Early Life (Weeks 1-10)
-    ("Childhood Beginnings", "What is your earliest childhood memory?"),
-    ("Family Bonds", "Who was your best friend growing up and why?"),
-    ("First Experiences", "What was your first job and what did you learn from it?"),
-    ("Overcoming Challenges", "Describe a time you overcame a significant challenge."),
-    ("Family Traditions", "What traditions did your family have during holidays?"),
-    ("Early Lessons", "What advice would you give to your younger self?"),
-    ("Historical Moments", "What moment in history do you wish you could have witnessed?"),
-    ("Personal Achievements", "What was your proudest achievement and why?"),
-    ("Important Relationships", "How did you meet your spouse/partner?"),
-    ("Core Values", "What values did your parents teach you that you still live by?"),
-    
-    # Growth & Development (Weeks 11-20)
-    ("Favorite Media", "What was your favorite book or movie as a child?"),
-    ("Special Places", "Describe a place that holds special meaning for you."),
-    ("Learning Skills", "What skill do you wish you had learned earlier in life?"),
-    ("Difficult Decisions", "What was the most difficult decision you ever had to make?"),
-    ("Changing Times", "How has your hometown changed since you were young?"),
-    ("Legacy & Impact", "What do you want to be remembered for?"),
-    ("Childhood Fears", "What was your biggest fear growing up and how did you overcome it?"),
-    ("Helping Others", "Describe a time when you helped someone in need."),
-    ("Technological Changes", "What invention in your lifetime has impacted you the most?"),
-    ("Dreams & Aspirations", "What would you do if you knew you couldn't fail?"),
-    
-    # Life Experiences (Weeks 21-30)
-    ("Learning New Things", "What is something you've always wanted to learn?"),
-    ("Food Memories", "Describe a meal that brings back fond memories."),
-    ("Spirituality & Beliefs", "What role did faith or spirituality play in your life?"),
-    ("Beautiful Experiences", "What was the most beautiful place you've ever visited?"),
-    ("Summer Adventures", "How did you spend your summers as a child?"),
-    ("Life Regrets", "What was your biggest regret and what did you learn from it?"),
-    ("Standing Up", "Describe a time when you had to stand up for what you believed in."),
-    ("Parental Wisdom", "What was the most important lesson your parents taught you?"),
-    ("World Change", "What would you change about the world if you could?"),
-    ("School Days", "What was your favorite subject in school and why?"),
-    
-    # Deeper Reflections (Weeks 31-40)
-    ("Family Recipes", "Describe a family recipe and its significance."),
-    ("Embarrassing Moments", "What was the most embarrassing moment of your life?"),
-    ("First Car", "What was your first car and what memories do you have with it?"),
-    ("Birthday Celebrations", "How did you celebrate your 16th birthday?"),
-    ("Saying Goodbye", "What was the hardest goodbye you've had to say?"),
-    ("Gratitude Moments", "Describe a time when you felt truly grateful."),
-    ("Childhood Dreams", "What was your dream job as a child?"),
-    ("Meaningful Gifts", "What was the most meaningful gift you've received?"),
-    ("Career Failures", "How did you handle failure in your career?"),
-    ("First Home", "What was your first apartment or house like?"),
-    
-    # Wisdom & Maturity (Weeks 41-50)
-    ("Taking Risks", "Describe a time when you took a leap of faith."),
-    ("Important Advice", "What was the most important piece of advice you received?"),
-    ("Parenting Moments", "What was your favorite way to spend time with your children?"),
-    ("Memorable Vacations", "What was the most memorable vacation you took?"),
-    ("Inner Peace", "Describe a time when you felt completely at peace."),
-    ("Entertainment Memories", "What was your first concert or show?"),
-    ("Technology Evolution", "What was the most important technological change during your lifetime?"),
-    ("Retirement Dreams", "How did you envision your retirement?"),
-    ("Childhood Games", "What was your favorite game to play as a child?"),
-    ("Personal Growth", "Describe a time when you surprised yourself."),
-    
-    # Final Reflections (Weeks 51-52)
-    ("Historical Events", "What was the most important political event during your lifetime?"),
-    ("Life Summary", "Looking back, what would you say was the most important theme of your life?")
+    "Childhood Beginnings", "Family Bonds", "First Experiences", "Overcoming Challenges", 
+    "Family Traditions", "Early Lessons", "Historical Moments", "Personal Achievements",
+    "Important Relationships", "Core Values", "Favorite Media", "Special Places",
+    "Learning Skills", "Difficult Decisions", "Changing Times", "Legacy & Impact",
+    "Childhood Fears", "Helping Others", "Technological Changes", "Dreams & Aspirations",
+    "Learning New Things", "Food Memories", "Spirituality & Beliefs", "Beautiful Experiences",
+    "Summer Adventures", "Life Regrets", "Standing Up", "Parental Wisdom",
+    "World Change", "School Days", "Family Recipes", "Embarrassing Moments",
+    "First Car", "Birthday Celebrations", "Saying Goodbye", "Gratitude Moments",
+    "Childhood Dreams", "Meaningful Gifts", "Career Failures", "First Home",
+    "Taking Risks", "Important Advice", "Parenting Moments", "Memorable Vacations",
+    "Inner Peace", "Entertainment Memories", "Technology Evolution", "Retirement Dreams",
+    "Childhood Games", "Personal Growth", "Historical Events", "Life Summary"
 ]
+
+# Question templates for each theme (7 questions per theme)
+theme_questions = {
+    "Childhood Beginnings": [
+        "What is your earliest childhood memory?",
+        "What games did you play as a young child?",
+        "Who were your childhood heroes?",
+        "What did you want to be when you grew up?",
+        "Describe your favorite childhood toy or possession.",
+        "What was your favorite bedtime story?",
+        "How did your childhood differ from your children's childhood?"
+    ],
+    "Family Bonds": [
+        "Who was your best friend growing up and why?",
+        "Describe a special family tradition from your childhood.",
+        "What family member influenced you the most?",
+        "Tell me about a family vacation you remember fondly.",
+        "What was your relationship like with your siblings?",
+        "Describe a time your family pulled together during a crisis.",
+        "What family recipe holds special memories for you?"
+    ],
+    "First Experiences": [
+        "What was your first job and what did you learn from it?",
+        "Describe your first day of school.",
+        "What was your first date like?",
+        "Tell me about learning to drive.",
+        "What was your first time living away from home like?",
+        "Describe your first major purchase.",
+        "What was your first experience with technology?"
+    ],
+    "Overcoming Challenges": [
+        "Describe a time you overcame a significant challenge.",
+        "What was the hardest decision you ever made?",
+        "Tell me about a time you failed and how you recovered.",
+        "Describe a period when you felt lost and how you found your way.",
+        "What obstacle took you the longest to overcome?",
+        "Tell me about a time you had to stand up for yourself.",
+        "What challenge made you stronger?"
+    ],
+    "Family Traditions": [
+        "What traditions did your family have during holidays?",
+        "Describe a weekly family ritual you enjoyed.",
+        "What cultural traditions were important to your family?",
+        "Tell me about a family recipe passed down through generations.",
+        "What birthday traditions did your family have?",
+        "Describe a family gathering that was especially meaningful.",
+        "What traditions would you like to pass on to future generations?"
+    ]
+}
+
+# Add remaining themes with 7 questions each
+for theme in week_themes[5:]:
+    if theme not in theme_questions:
+        theme_questions[theme] = [
+            f"What {theme.lower()} experience was most meaningful to you?",
+            f"How did {theme.lower()} shape who you are today?",
+            f"Tell me about a time when {theme.lower()} was challenging.",
+            f"What lesson did you learn from {theme.lower()}?",
+            f"Describe your most memorable {theme.lower()} moment.",
+            f"How has {theme.lower()} changed over the years?",
+            f"What advice would you give about {theme.lower()}?"
+        ]
 
 # Sample responses data structure
 sample_responses = {
-    "1": {
+    "1_0": {
         "week": 1,
         "theme": "Childhood Beginnings",
+        "question_index": 0,
         "question": "What is your earliest childhood memory?",
         "answer": "Playing in the backyard with my sister. We had a big oak tree we used to climb.",
-        "depth_prompt": "Can you describe the tree in more detail? What made it special to you?",
         "status": "answered",
         "timestamp": "2023-01-01 10:30:00"
     },
-    "2": {
+    "1_1": {
+        "week": 1,
+        "theme": "Childhood Beginnings",
+        "question_index": 1,
+        "question": "What games did you play as a young child?",
+        "answer": "We loved playing hide and seek in the neighborhood.",
+        "status": "answered",
+        "timestamp": "2023-01-02 14:15:00"
+    },
+    "2_0": {
         "week": 2,
         "theme": "Family Bonds",
+        "question_index": 0,
         "question": "Who was your best friend growing up and why?",
         "answer": "Tommy. We did everything together - fishing, playing baseball, exploring the woods.",
-        "depth_prompt": "What was the most memorable adventure you had with Tommy?",
         "status": "answered",
-        "timestamp": "2023-01-08 14:15:00"
-    },
-    "3": {
-        "week": 3,
-        "theme": "First Experiences",
-        "question": "What was your first job and what did you learn from it?",
-        "answer": "I worked at the local grocery store bagging groceries. I learned the value of hard work.",
-        "depth_prompt": "What was the most challenging part of that job?",
-        "status": "answered",
-        "timestamp": "2023-01-15 09:45:00"
+        "timestamp": "2023-01-08 09:45:00"
     }
 }
 
@@ -120,62 +138,87 @@ sample_responses = {
 if not st.session_state.responses:
     st.session_state.responses = sample_responses
 
-def get_week_info(week_number):
-    """Get theme and question for a specific week"""
+def get_week_theme(week_number):
+    """Get theme for a specific week"""
     if 1 <= week_number <= 52:
-        theme, question = week_themes[week_number - 1]
-        return theme, question
+        return week_themes[week_number - 1]
     else:
-        # Default to first week
-        theme, question = week_themes[0]
-        return theme, question
+        return week_themes[0]  # Default to first theme
 
-def save_response(week_number, answer):
+def get_week_questions(week_number):
+    """Get all questions for a specific week"""
+    theme = get_week_theme(week_number)
+    return theme_questions.get(theme, [f"Tell me about your experience with {theme}."])
+
+def get_current_question(week_number, question_index):
+    """Get the current question for a week"""
+    questions = get_week_questions(week_number)
+    if 0 <= question_index < len(questions):
+        return questions[question_index]
+    else:
+        return "Tell me about this week's theme."
+
+def save_response(week_number, question_index, answer):
     """Save a response to the session state"""
-    week_str = str(week_number)
-    if week_str not in st.session_state.responses:
-        st.session_state.responses[week_str] = {}
+    response_key = f"{week_number}_{question_index}"
+    if response_key not in st.session_state.responses:
+        st.session_state.responses[response_key] = {}
     
-    # Get theme and question for this week
-    theme, question = get_week_info(week_number)
-    st.session_state.responses[week_str]["week"] = week_number
-    st.session_state.responses[week_str]["theme"] = theme
-    st.session_state.responses[week_str]["question"] = question
+    # Get theme and question
+    theme = get_week_theme(week_number)
+    question = get_current_question(week_number, question_index)
     
-    st.session_state.responses[week_str]["answer"] = answer
-    st.session_state.responses[week_str]["status"] = "answered"
-    st.session_state.responses[week_str]["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Add depth prompt if not already there
-    if "depth_prompt" not in st.session_state.responses[week_str]:
-        st.session_state.responses[week_str]["depth_prompt"] = generate_depth_prompt(
-            st.session_state.responses[week_str]["question"], answer
-        )
+    st.session_state.responses[response_key]["week"] = week_number
+    st.session_state.responses[response_key]["theme"] = theme
+    st.session_state.responses[response_key]["question_index"] = question_index
+    st.session_state.responses[response_key]["question"] = question
+    st.session_state.responses[response_key]["answer"] = answer
+    st.session_state.responses[response_key]["status"] = "answered"
+    st.session_state.responses[response_key]["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def generate_depth_prompt(question, answer):
-    """Generate a prompt for deeper reflection (mock AI function)"""
-    prompts = [
-        f"Can you tell me more about {answer.split()[0] if answer else 'that'}?",
-        f"What made that experience particularly meaningful to you?",
-        f"How did that shape who you are today?",
-        f"What would you want your children to know about that time?",
-        f"If you could go back, what would you do differently?",
-        f"What advice would you give to someone in a similar situation?"
-    ]
-    return random.choice(prompts)
+def skip_question(week_number, question_index):
+    """Mark a question as skipped"""
+    if week_number not in st.session_state.skipped_questions:
+        st.session_state.skipped_questions[week_number] = []
+    if question_index not in st.session_state.skipped_questions[week_number]:
+        st.session_state.skipped_questions[week_number].append(question_index)
+
+def request_new_question(week_number, question_index):
+    """Mark a question as requested for replacement"""
+    if week_number not in st.session_state.requested_new_questions:
+        st.session_state.requested_new_questions[week_number] = []
+    if question_index not in st.session_state.requested_new_questions[week_number]:
+        st.session_state.requested_new_questions[week_number].append(question_index)
+
+def get_week_progress(week_number):
+    """Get progress for a specific week"""
+    answered = 0
+    total = 7
+    for i in range(7):
+        response_key = f"{week_number}_{i}"
+        if response_key in st.session_state.responses and st.session_state.responses[response_key].get("status") == "answered":
+            answered += 1
+    return answered, total
+
+def get_overall_progress():
+    """Get overall progress across all weeks"""
+    total_questions = 52 * 7
+    answered_count = len([r for r in st.session_state.responses.values() if r.get("status") == "answered"])
+    percentage = (answered_count / total_questions) * 100 if total_questions > 0 else 0
+    return answered_count, percentage
 
 def search_responses(query):
-    """Search responses using natural language (mock AI function)"""
+    """Search responses using natural language"""
     results = []
     query_lower = query.lower()
     
-    for week_str, response in st.session_state.responses.items():
+    for response_key, response in st.session_state.responses.items():
         if "answer" in response and "question" in response:
             answer_lower = response["answer"].lower()
             question_lower = response["question"].lower()
             theme_lower = response["theme"].lower()
             
-            # Simple keyword matching (in a real app, use embeddings)
+            # Simple keyword matching
             if (query_lower in answer_lower or 
                 query_lower in question_lower or
                 query_lower in theme_lower or
@@ -190,32 +233,13 @@ def search_responses(query):
                     "timestamp": response.get("timestamp", "")
                 })
     
-    # Sort by week (ascending)
-    results.sort(key=lambda x: x["week"])
+    # Sort by week and question index
+    results.sort(key=lambda x: (x["week"], x["question"]))
     return results
-
-def get_response_stats():
-    """Get statistics about responses"""
-    total_questions = 52
-    answered_count = len([r for r in st.session_state.responses.values() if r.get("status") == "answered"])
-    percentage = (answered_count / total_questions) * 100 if total_questions > 0 else 0
-    
-    return answered_count, percentage
 
 def export_responses():
     """Export all responses as JSON"""
     return json.dumps(st.session_state.responses, indent=2)
-
-def get_theme_progression():
-    """Get theme progression statistics"""
-    themes = {}
-    for week_str, response in st.session_state.responses.items():
-        if response.get("status") == "answered":
-            theme = response["theme"]
-            if theme not in themes:
-                themes[theme] = 0
-            themes[theme] += 1
-    return themes
 
 # Main app
 st.set_page_config(page_title="52 Weeks Memoir", page_icon="📖", layout="wide")
@@ -223,7 +247,7 @@ st.set_page_config(page_title="52 Weeks Memoir", page_icon="📖", layout="wide"
 # Title and description
 st.title("📖 52 Weeks Memoir")
 st.markdown("""
-*Build a lifetime of memories, one themed week at a time*
+*Build a lifetime of memories with 7 questions per week*
 """)
 
 # User selection
@@ -245,15 +269,14 @@ if not st.session_state.user_type:
     
     st.info("Select your role to get started")
     
-    # Show sample week progression
-    st.markdown("### Sample Week Progression")
-    sample_weeks = pd.DataFrame([
-        {"Week": 1, "Theme": "Childhood Beginnings", "Question": "What is your earliest childhood memory?"},
-        {"Week": 2, "Theme": "Family Bonds", "Question": "Who was your best friend growing up?"},
-        {"Week": 3, "Theme": "First Experiences", "Question": "What was your first job?"},
-        {"Week": 52, "Theme": "Life Summary", "Question": "Looking back, what would you say was the most important theme of your life?"}
-    ])
-    st.dataframe(sample_weeks, use_container_width=True, hide_index=True)
+    # Show sample week structure
+    st.markdown("### Sample Week Structure")
+    sample_data = []
+    for i in range(1, 4):
+        theme = get_week_theme(i)
+        sample_data.append({"Week": i, "Theme": theme, "Questions": "7 questions per theme"})
+    sample_df = pd.DataFrame(sample_data)
+    st.dataframe(sample_df, use_container_width=True, hide_index=True)
 
 # Parent's view
 elif st.session_state.user_type == "parent":
@@ -268,7 +291,8 @@ elif st.session_state.user_type == "parent":
                 new_week = max(1, st.session_state.view_week - 1)
                 st.session_state.view_week = new_week
             else:
-                st.session_state.view_week = 51  # Go to week 51 if no current week
+                st.session_state.view_week = 51
+            st.session_state.current_question_index = 0
             st.rerun()
     
     with col2:
@@ -279,6 +303,7 @@ elif st.session_state.user_type == "parent":
         
         if st.session_state.view_week != selected_week:
             st.session_state.view_week = selected_week
+            st.session_state.current_question_index = 0
             st.rerun()
     
     with col3:
@@ -287,26 +312,56 @@ elif st.session_state.user_type == "parent":
                 new_week = min(52, st.session_state.view_week + 1)
                 st.session_state.view_week = new_week
             else:
-                st.session_state.view_week = 2  # Go to week 2 if no current week
+                st.session_state.view_week = 2
+            st.session_state.current_question_index = 0
             st.rerun()
     
-    # Display question for selected week
+    # Display current week
     if st.session_state.view_week:
         week_number = st.session_state.view_week
     else:
         week_number = 1
+        st.session_state.view_week = 1
     
-    theme, question = get_week_info(week_number)
+    theme = get_week_theme(week_number)
+    questions = get_week_questions(week_number)
     
-    st.markdown(f"### Week {week_number}")
-    st.markdown(f"#### Theme: {theme}")
-    st.markdown(f"**Question:** {question}")
+    # Week progress
+    answered, total = get_week_progress(week_number)
+    st.progress(answered / total)
+    st.caption(f"Week Progress: {answered}/{total} questions answered")
+    
+    st.markdown(f"### Week {week_number}: {theme}")
+    
+    # Question navigation within week
+    question_col1, question_col2, question_col3 = st.columns([1, 3, 1])
+    
+    with question_col1:
+        if st.button("◀ Previous Question"):
+            st.session_state.current_question_index = max(0, st.session_state.current_question_index - 1)
+            st.rerun()
+    
+    with question_col2:
+        question_index = st.slider("Question", 0, 6, st.session_state.current_question_index, 
+                                 format="Question %d")
+        if st.session_state.current_question_index != question_index:
+            st.session_state.current_question_index = question_index
+            st.rerun()
+    
+    with question_col3:
+        if st.button("Next Question ▶"):
+            st.session_state.current_question_index = min(6, st.session_state.current_question_index + 1)
+            st.rerun()
+    
+    # Display current question
+    current_question = get_current_question(week_number, st.session_state.current_question_index)
+    st.markdown(f"**Question {st.session_state.current_question_index + 1}/7:** {current_question}")
     
     # Check if already answered
-    week_str = str(week_number)
-    if week_str in st.session_state.responses and st.session_state.responses[week_str].get("status") == "answered":
-        st.success("✅ You've already answered this week's question!")
-        st.markdown(f"**Your response:** {st.session_state.responses[week_str]['answer']}")
+    response_key = f"{week_number}_{st.session_state.current_question_index}"
+    if response_key in st.session_state.responses and st.session_state.responses[response_key].get("status") == "answered":
+        st.success("✅ You've already answered this question!")
+        st.markdown(f"**Your response:** {st.session_state.responses[response_key]['answer']}")
         
         if st.button("📝 Edit Response"):
             st.session_state.editing_week = week_number
@@ -315,33 +370,47 @@ elif st.session_state.user_type == "parent":
         # Show response form
         with st.form("response_form"):
             answer = st.text_area("Your response:", height=200, 
-                                value=st.session_state.responses.get(week_str, {}).get("answer", ""))
+                                value=st.session_state.responses.get(response_key, {}).get("answer", ""))
             submitted = st.form_submit_button("Save Response")
             
             if submitted:
-                save_response(week_number, answer)
+                save_response(week_number, st.session_state.current_question_index, answer)
                 st.success("Response saved!")
+                # Move to next question
+                if st.session_state.current_question_index < 6:
+                    st.session_state.current_question_index += 1
                 st.rerun()
     
-    # Editing existing response
-    if st.session_state.editing_week:
-        st.markdown("---")
-        st.subheader(f"Editing Response for Week {st.session_state.editing_week}")
-        edit_week_str = str(st.session_state.editing_week)
-        edit_response = st.session_state.responses[edit_week_str]
-        st.markdown(f"**Theme:** {edit_response['theme']}")
-        st.markdown(f"**Question:** {edit_response['question']}")
-        
-        with st.form("edit_form"):
-            edited_answer = st.text_area("Your response:", height=200, 
-                                       value=edit_response.get("answer", ""))
-            edit_submitted = st.form_submit_button("Update Response")
-            
-            if edit_submitted:
-                save_response(st.session_state.editing_week, edited_answer)
-                st.success("Response updated!")
-                st.session_state.editing_week = None
-                st.rerun()
+    # Question options
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("⏭️ Skip Question"):
+            skip_question(week_number, st.session_state.current_question_index)
+            if st.session_state.current_question_index < 6:
+                st.session_state.current_question_index += 1
+            st.rerun()
+    
+    with col2:
+        if st.button("🔄 Request New Question"):
+            request_new_question(week_number, st.session_state.current_question_index)
+            # In a real app, this would generate a new question
+            st.info("New question requested! (In demo, using same question)")
+            st.rerun()
+    
+    with col3:
+        if st.button("➡️ Next Unanswered"):
+            # Find next unanswered question
+            found = False
+            for i in range(st.session_state.current_question_index + 1, 7):
+                check_key = f"{week_number}_{i}"
+                if check_key not in st.session_state.responses or st.session_state.responses[check_key].get("status") != "answered":
+                    st.session_state.current_question_index = i
+                    found = True
+                    break
+            if not found:
+                st.info("All questions in this week are answered!")
+            st.rerun()
     
     # Navigation
     st.markdown("---")
@@ -349,24 +418,25 @@ elif st.session_state.user_type == "parent":
         st.session_state.user_type = None
         st.session_state.editing_week = None
         st.session_state.view_week = None
+        st.session_state.current_question_index = 0
         st.rerun()
 
 # Child's view
 elif st.session_state.user_type == "child":
     st.subheader("Review & Guide Responses")
     
-    # Stats
-    answered_count, percentage = get_response_stats()
+    # Overall stats
+    answered_count, percentage = get_overall_progress()
     col1, col2, col3 = st.columns(3)
-    col1.metric("Weeks Completed", answered_count, "52 total")
+    col1.metric("Questions Answered", answered_count, "364 total")
     col2.metric("Completion", f"{percentage:.1f}%", "Progress")
-    col3.metric("Weeks Remaining", 52 - answered_count)
+    col3.metric("Questions Remaining", 364 - answered_count)
     
     # Progress bar
     st.progress(percentage / 100)
     
     # Tabs for different views
-    tab1, tab2, tab3, tab4 = st.tabs(["🔍 Search", "📚 All Responses", "📊 Stats", "💾 Export"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🔍 Search", "📚 By Week", "📊 Stats", "💾 Export"])
     
     with tab1:
         st.markdown("### 🔍 Search Responses")
@@ -386,92 +456,77 @@ elif st.session_state.user_type == "child":
             st.info("Enter a search term to find specific responses")
     
     with tab2:
-        st.markdown("### 📚 All Responses by Week")
+        st.markdown("### 📚 Responses by Week")
         
-        # Show all responses organized by week
-        answered_weeks = []
-        for week_str, response in st.session_state.responses.items():
-            if response.get("status") == "answered":
-                answered_weeks.append(int(week_str))
+        # Week selector
+        selected_week = st.selectbox("Select week to view:", 
+                                   options=list(range(1, 53)), 
+                                   index=0)
         
-        if answered_weeks:
-            answered_weeks.sort()
+        theme = get_week_theme(selected_week)
+        questions = get_week_questions(selected_week)
+        answered, total = get_week_progress(selected_week)
+        
+        st.markdown(f"#### Week {selected_week}: {theme}")
+        st.progress(answered / total)
+        st.caption(f"Progress: {answered}/{total} questions answered")
+        
+        # Show all questions for this week
+        for i in range(7):
+            response_key = f"{selected_week}_{i}"
+            question = questions[i] if i < len(questions) else f"Question {i+1}"
             
-            # Create tabs for different theme sections
-            theme_sections = [
-                ("Foundation", 1, 10),
-                ("Growth", 11, 20),
-                ("Experiences", 21, 30),
-                ("Wisdom", 31, 40),
-                ("Reflections", 41, 52)
-            ]
-            
-            section_tabs = st.tabs([section[0] for section in theme_sections])
-            
-            for i, (section_name, start_week, end_week) in enumerate(theme_sections):
-                with section_tabs[i]:
-                    st.markdown(f"#### {section_name} ({start_week}-{end_week})")
+            with st.expander(f"**Q{i+1}: {question[:50]}...**"):
+                if response_key in st.session_state.responses and st.session_state.responses[response_key].get("status") == "answered":
+                    st.markdown(f"**Question:** {question}")
+                    st.markdown(f"**Answer:** {st.session_state.responses[response_key]['answer']}")
+                    st.caption(f"Answered: {st.session_state.responses[response_key].get('timestamp', '')}")
+                else:
+                    st.info("Not yet answered")
                     
-                    section_weeks = [w for w in answered_weeks if start_week <= w <= end_week]
-                    
-                    if section_weeks:
-                        for week_num in section_weeks:
-                            week_str = str(week_num)
-                            response = st.session_state.responses[week_str]
-                            with st.expander(f"**Week {week_num}: {response['theme']}**"):
-                                st.markdown(f"**Question:** {response['question']}")
-                                st.markdown(f"**Answer:** {response['answer']}")
-                                
-                                # Depth prompt section
-                                if response.get('depth_prompt'):
-                                    st.markdown("**Suggested follow-up:**")
-                                    st.info(response['depth_prompt'])
-                                
-                                # Send prompt button (mock)
-                                col1, col2 = st.columns([3, 1])
-                                with col1:
-                                    st.caption(f"Answered: {response.get('timestamp', '')}")
-                                with col2:
-                                    if st.button("📤 Send Depth Prompt", key=f"send_{week_str}"):
-                                        st.success(f"Depth prompt sent to parent for Week {week_num}")
-                    else:
-                        st.info(f"No responses yet in the {section_name} section.")
-        else:
-            st.info("No responses yet. Encourage your parent to start answering questions!")
+                    # Show if skipped or requested new
+                    if selected_week in st.session_state.skipped_questions and i in st.session_state.skipped_questions[selected_week]:
+                        st.caption("⏭️ Skipped")
+                    elif selected_week in st.session_state.requested_new_questions and i in st.session_state.requested_new_questions[selected_week]:
+                        st.caption("🔄 New question requested")
     
     with tab3:
-        st.markdown("### 📊 Response Statistics")
+        st.markdown("### 📊 Progress Statistics")
         
-        # Theme progression
-        theme_stats = get_theme_progression()
-        if theme_stats:
-            st.markdown("**Theme Completion:**")
-            theme_df = pd.DataFrame(list(theme_stats.items()), columns=["Theme", "Completed"])
-            theme_df = theme_df.sort_values("Theme")
-            st.bar_chart(theme_df.set_index("Theme"))
-            
-            # Completion by section
-            st.markdown("**Completion by Theme Section:**")
-            section_completion = {}
-            theme_sections = [
-                ("Foundation", 1, 10),
-                ("Growth", 11, 20),
-                ("Experiences", 21, 30),
-                ("Wisdom", 31, 40),
-                ("Reflections", 41, 52)
-            ]
-            
-            for section_name, start_week, end_week in theme_sections:
-                section_total = end_week - start_week + 1
-                section_answered = len([w for w in range(start_week, end_week + 1) 
-                                      if str(w) in st.session_state.responses and 
-                                      st.session_state.responses[str(w)].get("status") == "answered"])
-                section_completion[section_name] = (section_answered / section_total) * 100 if section_total > 0 else 0
-            
-            section_df = pd.DataFrame(list(section_completion.items()), columns=["Section", "Completion %"])
-            st.bar_chart(section_df.set_index("Section"))
-        else:
-            st.info("No response data available for statistics")
+        # Weekly completion chart
+        weekly_data = []
+        for week in range(1, 53):
+            answered, total = get_week_progress(week)
+            weekly_data.append({"Week": week, "Completion": (answered / total) * 100 if total > 0 else 0})
+        
+        weekly_df = pd.DataFrame(weekly_data)
+        st.markdown("**Weekly Completion**")
+        st.bar_chart(weekly_df.set_index("Week"))
+        
+        # Theme completion
+        st.markdown("**Theme Sections**")
+        theme_sections = [
+            ("Foundation", 1, 10),
+            ("Growth", 11, 20),
+            ("Experiences", 21, 30),
+            ("Wisdom", 31, 40),
+            ("Reflections", 41, 52)
+        ]
+        
+        section_data = []
+        for section_name, start_week, end_week in theme_sections:
+            section_total = (end_week - start_week + 1) * 7
+            section_answered = 0
+            for week in range(start_week, end_week + 1):
+                answered, _ = get_week_progress(week)
+                section_answered += answered
+            section_data.append({
+                "Section": section_name,
+                "Completion": (section_answered / section_total) * 100 if section_total > 0 else 0
+            })
+        
+        section_df = pd.DataFrame(section_data)
+        st.bar_chart(section_df.set_index("Section"))
     
     with tab4:
         st.markdown("### 💾 Export Data")
@@ -486,19 +541,25 @@ elif st.session_state.user_type == "child":
             mime="application/json"
         )
         
-        st.markdown("### 📋 Response Summary")
+        st.markdown("### 📋 Summary")
         if st.session_state.responses:
             total_words = sum(len(response.get("answer", "").split()) 
                             for response in st.session_state.responses.values() 
                             if response.get("status") == "answered")
             st.metric("Total Words Written", f"{total_words:,}")
             
-            # Show sample of responses
-            st.markdown("**Sample Responses:**")
-            sample_responses_list = list(st.session_state.responses.items())
-            for week_str, response in sample_responses_list[:5]:
-                if response.get("status") == "answered":
-                    st.markdown(f"**Week {response['week']}: {response['theme']}**")
+            # Show sample weeks
+            st.markdown("**Sample Completed Weeks:**")
+            completed_weeks = set()
+            for response_key in st.session_state.responses:
+                if st.session_state.responses[response_key].get("status") == "answered":
+                    week_num = st.session_state.responses[response_key]["week"]
+                    completed_weeks.add(week_num)
+            
+            completed_weeks = sorted(list(completed_weeks))[:5]  # Show first 5
+            for week in completed_weeks:
+                theme = get_week_theme(week)
+                st.markdown(f"**Week {week}: {theme}**")
         else:
             st.info("No responses to export yet")
     
@@ -510,4 +571,4 @@ elif st.session_state.user_type == "child":
 
 # Footer
 st.markdown("---")
-st.caption("52 Weeks Memoir - Preserving memories one week at a time")
+st.caption("52 Weeks Memoir - 7 questions per week, 364 memories to preserve")
