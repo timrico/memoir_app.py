@@ -23,114 +23,338 @@ if 'skipped_questions' not in st.session_state:
     st.session_state.skipped_questions = {}
 if 'requested_new_questions' not in st.session_state:
     st.session_state.requested_new_questions = {}
+if 'detail_prompt_active' not in st.session_state:
+    st.session_state.detail_prompt_active = False
+if 'current_response_key' not in st.session_state:
+    st.session_state.current_response_key = None
 
-# 52 Week Themes
+# Baby Milestone Themes (52 weeks from birth to toddler)
 week_themes = [
-    "Childhood Beginnings", "Family Bonds", "First Experiences", "Overcoming Challenges", 
-    "Family Traditions", "Early Lessons", "Historical Moments", "Personal Achievements",
-    "Important Relationships", "Core Values", "Favorite Media", "Special Places",
-    "Learning Skills", "Difficult Decisions", "Changing Times", "Legacy & Impact",
-    "Childhood Fears", "Helping Others", "Technological Changes", "Dreams & Aspirations",
-    "Learning New Things", "Food Memories", "Spirituality & Beliefs", "Beautiful Experiences",
-    "Summer Adventures", "Life Regrets", "Standing Up", "Parental Wisdom",
-    "World Change", "School Days", "Family Recipes", "Embarrassing Moments",
-    "First Car", "Birthday Celebrations", "Saying Goodbye", "Gratitude Moments",
-    "Childhood Dreams", "Meaningful Gifts", "Career Failures", "First Home",
-    "Taking Risks", "Important Advice", "Parenting Moments", "Memorable Vacations",
-    "Inner Peace", "Entertainment Memories", "Technology Evolution", "Retirement Dreams",
-    "Childhood Games", "Personal Growth", "Historical Events", "Life Summary"
+    # Birth & Newborn Period (Weeks 1-4)
+    "Birth Story", "First Days Home", "Two Weeks Old", "One Month Checkup",
+    
+    # Infant Milestones (Months 1-6)
+    "Two Months Old", "Three Months Old", "Four Months Old", "Five Months Old", 
+    "Six Months Old", "Six Month Checkup",
+    
+    # Growing Infant (Months 6-12)
+    "Seven Months Old", "Eight Months Old", "Nine Months Old", "Ten Months Old",
+    "Eleven Months Old", "Twelve Months Old", "First Birthday",
+    
+    # Toddler Years (Months 12-36)
+    "Thirteen Months", "Fourteen Months", "Fifteen Months", "Sixteen Months",
+    "Seventeen Months", "Eighteen Months", "Eighteen Month Checkup",
+    "Nineteen Months", "Twenty Months", "Twenty-One Months", "Two Years Old",
+    "Two Year Checkup", "Twenty-Five Months", "Twenty-Six Months", 
+    "Twenty-Seven Months", "Twenty-Eight Months", "Twenty-Nine Months", 
+    "Thirty Months", "Thirty-One Months", "Thirty-Two Months", "Thirty-Three Months",
+    "Thirty-Four Months", "Thirty-Five Months", "Three Years Old", "Three Year Checkup",
+    
+    # Additional Milestones
+    "First Words", "First Steps", "First Foods", "Sleep Patterns",
+    "Personality Development", "Social Interactions", "Favorite Toys & Activities",
+    "Health & Growth", "Family Traditions", "Special Memories"
 ]
 
-# Question templates for each theme (7 questions per theme)
+# Question templates for each theme
 theme_questions = {
-    "Childhood Beginnings": [
-        "What is your earliest childhood memory?",
-        "What games did you play as a young child?",
-        "Who were your childhood heroes?",
-        "What did you want to be when you grew up?",
-        "Describe your favorite childhood toy or possession.",
-        "What was your favorite bedtime story?",
-        "How did your childhood differ from your children's childhood?"
+    # Birth Story - Most comprehensive
+    "Birth Story": [
+        "Date, time, and place of birth",
+        "Baby's weight and length at birth",
+        "Details about labor and delivery",
+        "Who was present during the birth?",
+        "What was the birth experience like?",
+        "Baby's Apgar scores",
+        "Any special circumstances or complications?",
+        "First moments with baby",
+        "Initial health checks and procedures",
+        "First feeding experience"
     ],
-    "Family Bonds": [
-        "Who was your best friend growing up and why?",
-        "Describe a special family tradition from your childhood.",
-        "What family member influenced you the most?",
-        "Tell me about a family vacation you remember fondly.",
-        "What was your relationship like with your siblings?",
-        "Describe a time your family pulled together during a crisis.",
-        "What family recipe holds special memories for you?"
+    
+    # First Days Home
+    "First Days Home": [
+        "How did the first night home go?",
+        "Baby's first sleep patterns at home",
+        "First bath at home",
+        "Family's first impressions",
+        "Adjustments to life with baby",
+        "Biggest surprises about baby",
+        "Most challenging moments",
+        "Sweetest moments",
+        "How older siblings reacted",
+        "Support received from family/friends"
     ],
-    "First Experiences": [
-        "What was your first job and what did you learn from it?",
-        "Describe your first day of school.",
-        "What was your first date like?",
-        "Tell me about learning to drive.",
-        "What was your first time living away from home like?",
-        "Describe your first major purchase.",
-        "What was your first experience with technology?"
+    
+    # Standard milestone weeks (7 questions each)
+    "Two Months Old": [
+        "Current weight and measurements",
+        "Sleep patterns and routines",
+        "Feeding habits and preferences",
+        "New skills or milestones reached",
+        "Favorite activities or toys",
+        "Personality traits becoming visible",
+        "Health checkup details"
     ],
-    "Overcoming Challenges": [
-        "Describe a time you overcame a significant challenge.",
-        "What was the hardest decision you ever made?",
-        "Tell me about a time you failed and how you recovered.",
-        "Describe a period when you felt lost and how you found your way.",
-        "What obstacle took you the longest to overcome?",
-        "Tell me about a time you had to stand up for yourself.",
-        "What challenge made you stronger?"
+    
+    "Three Months Old": [
+        "Current weight and measurements",
+        "Sleep patterns and routines",
+        "Feeding habits and preferences",
+        "New skills or milestones reached",
+        "Favorite activities or toys",
+        "Personality traits becoming visible",
+        "Health checkup details"
     ],
+    
+    "Four Months Old": [
+        "Current weight and measurements",
+        "Sleep patterns and routines",
+        "Feeding habits and preferences",
+        "New skills or milestones reached",
+        "Favorite activities or toys",
+        "Personality traits becoming visible",
+        "Health checkup details"
+    ],
+    
+    "Six Months Old": [
+        "Current weight and measurements",
+        "Introduction to solid foods",
+        "Sleep patterns and routines",
+        "New skills or milestones reached",
+        "Favorite activities or toys",
+        "Personality traits becoming visible",
+        "Health checkup and vaccinations"
+    ],
+    
+    "Nine Months Old": [
+        "Current weight and measurements",
+        "Crawling or mobility progress",
+        "Favorite games and activities",
+        "New sounds or words",
+        "Social interactions",
+        "Sleep patterns and routines",
+        "Health checkup details"
+    ],
+    
+    "Twelve Months Old": [
+        "Current weight and measurements",
+        "Walking progress",
+        "Favorite words or first words",
+        "Favorite foods",
+        "Personality development",
+        "Social skills",
+        "Health checkup and vaccinations"
+    ],
+    
+    "First Birthday": [
+        "Birthday celebration details",
+        "Favorite birthday gifts",
+        "Reactions to birthday cake",
+        "Family and friends who attended",
+        "Baby's personality on display",
+        "Milestone achievements this year",
+        "Looking ahead to next year"
+    ],
+    
+    "Eighteen Months": [
+        "Current weight and measurements",
+        "Walking and running progress",
+        "Vocabulary development",
+        "Favorite activities and toys",
+        "Temperament and personality",
+        "Sleep patterns",
+        "Health checkup details"
+    ],
+    
+    "Two Years Old": [
+        "Current weight and measurements",
+        "Speech and language development",
+        "Favorite games and activities",
+        "Social interactions with others",
+        "Favorite books and stories",
+        "Potty training progress",
+        "Health checkup and vaccinations"
+    ],
+    
+    "Three Years Old": [
+        "Current weight and measurements",
+        "Speech and language skills",
+        "Imagination and creativity",
+        "Friendships and social skills",
+        "Favorite activities and interests",
+        "Independence and self-help skills",
+        "Health checkup details"
+    ],
+    
+    # Special milestone themes
+    "First Words": [
+        "First word spoken",
+        "Date and circumstances",
+        "Family's reaction",
+        "Words that followed quickly",
+        "Baby's communication style",
+        "How baby uses words to express needs",
+        "Funniest or most memorable first words"
+    ],
+    
+    "First Steps": [
+        "Date of first steps",
+        "Where and how it happened",
+        "Family's reaction",
+        "Baby's expression and excitement",
+        "How walking changed daily life",
+        "Baby's new favorite activities",
+        "Safety adjustments made at home"
+    ],
+    
+    "First Foods": [
+        "First solid food introduced",
+        "Baby's reaction and taste preferences",
+        "Messiest meal experiences",
+        "Favorite first foods",
+        "Allergic reactions or sensitivities",
+        "Family meals with baby",
+        "Transition from purees to finger foods"
+    ],
+    
+    "Sleep Patterns": [
+        "Newborn sleep patterns",
+        "Establishing bedtime routines",
+        "Night waking patterns",
+        "Nap schedules and changes",
+        "Sleep regression experiences",
+        "Co-sleeping or crib arrangements",
+        "Current sleep situation"
+    ],
+    
+    "Health & Growth": [
+        "Vaccination schedule and reactions",
+        "Growth spurts and changes",
+        "Common illnesses and recovery",
+        "Doctor visits and checkups",
+        "Medications or treatments",
+        "Emergency room visits",
+        "Overall health observations"
+    ],
+    
+    "Favorite Toys & Activities": [
+        "Most loved comfort items",
+        "Favorite toys at different ages",
+        "Games baby enjoys most",
+        "Creative play activities",
+        "Outdoor activities and preferences",
+        "Musical toys and reactions",
+        "Books and reading time"
+    ],
+    
+    "Personality Development": [
+        "Shy or outgoing tendencies",
+        "Favorite ways to be comforted",
+        "Reactions to strangers",
+        "Emotional expressions",
+        "Favorite routines and rituals",
+        "Unique quirks and habits",
+        "Changes in personality over time"
+    ],
+    
+    "Social Interactions": [
+        "Interactions with family members",
+        "Reactions to other children",
+        "Stranger anxiety experiences",
+        "Favorite family activities",
+        "Playdate experiences",
+        "Grandparent relationships",
+        "Community interactions"
+    ],
+    
     "Family Traditions": [
-        "What traditions did your family have during holidays?",
-        "Describe a weekly family ritual you enjoyed.",
-        "What cultural traditions were important to your family?",
-        "Tell me about a family recipe passed down through generations.",
-        "What birthday traditions did your family have?",
-        "Describe a family gathering that was especially meaningful.",
-        "What traditions would you like to pass on to future generations?"
+        "Holiday celebrations with baby",
+        "Family routines and rituals",
+        "Special family activities",
+        "Cultural or religious traditions",
+        "Weekly family activities",
+        "Birthday and celebration traditions",
+        "Family memories created"
+    ],
+    
+    "Special Memories": [
+        "Most precious moments",
+        "Unexpected joys",
+        "Challenging but rewarding times",
+        "Family bonding experiences",
+        "Milestone celebrations",
+        "Travel experiences with baby",
+        "Photos and videos that capture special times"
     ]
 }
 
-# Add remaining themes with 7 questions each
-for theme in week_themes[5:]:
+# Add remaining standard weeks with 7 questions each
+standard_milestone_weeks = [
+    "Two Weeks Old", "One Month Checkup", "Five Months Old", 
+    "Seven Months Old", "Eight Months Old", "Ten Months Old",
+    "Eleven Months Old", "Six Month Checkup", "Seventeen Months",
+    "Nineteen Months", "Twenty Months", "Twenty-One Months",
+    "Two Year Checkup", "Twenty-Five Months", "Twenty-Six Months",
+    "Twenty-Seven Months", "Twenty-Eight Months", "Twenty-Nine Months",
+    "Thirty Months", "Thirty-One Months", "Thirty-Two Months",
+    "Thirty-Three Months", "Thirty-Four Months", "Thirty-Five Months",
+    "Three Year Checkup"
+]
+
+for theme in standard_milestone_weeks:
     if theme not in theme_questions:
         theme_questions[theme] = [
-            f"What {theme.lower()} experience was most meaningful to you?",
-            f"How did {theme.lower()} shape who you are today?",
-            f"Tell me about a time when {theme.lower()} was challenging.",
-            f"What lesson did you learn from {theme.lower()}?",
-            f"Describe your most memorable {theme.lower()} moment.",
-            f"How has {theme.lower()} changed over the years?",
-            f"What advice would you give about {theme.lower()}?"
+            "Current weight and measurements",
+            "Sleep patterns and routines",
+            "Feeding habits and preferences",
+            "New skills or milestones reached",
+            "Favorite activities or toys",
+            "Personality traits becoming visible",
+            "Health checkup details"
         ]
 
 # Sample responses data structure
 sample_responses = {
     "1_0": {
         "week": 1,
-        "theme": "Childhood Beginnings",
+        "theme": "Birth Story",
         "question_index": 0,
-        "question": "What is your earliest childhood memory?",
-        "answer": "Playing in the backyard with my sister. We had a big oak tree we used to climb.",
+        "question": "Date, time, and place of birth",
+        "answer": "Baby was born on June 15, 2023 at 3:30 AM at St. Mary's Hospital in downtown. It was a beautiful sunny morning when we arrived.",
         "status": "answered",
-        "timestamp": "2023-01-01 10:30:00"
+        "timestamp": "2023-06-16 10:30:00",
+        "expanded": True
     },
     "1_1": {
         "week": 1,
-        "theme": "Childhood Beginnings",
+        "theme": "Birth Story",
         "question_index": 1,
-        "question": "What games did you play as a young child?",
-        "answer": "We loved playing hide and seek in the neighborhood.",
+        "question": "Baby's weight and length at birth",
+        "answer": "7 pounds 4 ounces and 20 inches long.",
         "status": "answered",
-        "timestamp": "2023-01-02 14:15:00"
+        "timestamp": "2023-06-16 10:35:00",
+        "expanded": False
     },
     "2_0": {
         "week": 2,
-        "theme": "Family Bonds",
+        "theme": "First Days Home",
         "question_index": 0,
-        "question": "Who was your best friend growing up and why?",
-        "answer": "Tommy. We did everything together - fishing, playing baseball, exploring the woods.",
+        "question": "How did the first night home go?",
+        "answer": "The first night was challenging but wonderful. Baby cried a lot but we managed to get some sleep.",
         "status": "answered",
-        "timestamp": "2023-01-08 09:45:00"
+        "timestamp": "2023-06-22 09:45:00",
+        "expanded": False
+    },
+    "6_0": {
+        "week": 6,
+        "theme": "Six Months Old",
+        "question_index": 0,
+        "question": "Current weight and measurements",
+        "answer": "Baby now weighs 16 pounds and is 26 inches long. Growing so fast!",
+        "status": "answered",
+        "timestamp": "2023-12-15 14:15:00",
+        "expanded": False
     }
 }
 
@@ -140,7 +364,7 @@ if not st.session_state.responses:
 
 def get_week_theme(week_number):
     """Get theme for a specific week"""
-    if 1 <= week_number <= 52:
+    if 1 <= week_number <= len(week_themes):
         return week_themes[week_number - 1]
     else:
         return week_themes[0]  # Default to first theme
@@ -156,7 +380,7 @@ def get_current_question(week_number, question_index):
     if 0 <= question_index < len(questions):
         return questions[question_index]
     else:
-        return "Tell me about this week's theme."
+        return "Tell me about this milestone."
 
 def save_response(week_number, question_index, answer):
     """Save a response to the session state"""
@@ -175,6 +399,12 @@ def save_response(week_number, question_index, answer):
     st.session_state.responses[response_key]["answer"] = answer
     st.session_state.responses[response_key]["status"] = "answered"
     st.session_state.responses[response_key]["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Check if answer needs expansion
+    word_count = len(answer.split())
+    st.session_state.responses[response_key]["expanded"] = word_count >= 15  # Higher threshold for baby book
+    
+    return word_count
 
 def skip_question(week_number, question_index):
     """Mark a question as skipped"""
@@ -192,18 +422,25 @@ def request_new_question(week_number, question_index):
 
 def get_week_progress(week_number):
     """Get progress for a specific week"""
+    total_questions = len(get_week_questions(week_number))
     answered = 0
-    total = 7
-    for i in range(7):
+    for i in range(total_questions):
         response_key = f"{week_number}_{i}"
         if response_key in st.session_state.responses and st.session_state.responses[response_key].get("status") == "answered":
             answered += 1
-    return answered, total
+    return answered, total_questions
 
 def get_overall_progress():
     """Get overall progress across all weeks"""
-    total_questions = 52 * 7
-    answered_count = len([r for r in st.session_state.responses.values() if r.get("status") == "answered"])
+    total_questions = 0
+    answered_count = 0
+    
+    for week_num in range(1, len(week_themes) + 1):
+        _, week_total = get_week_progress(week_num)
+        total_questions += week_total
+        answered_count += len([r for r in st.session_state.responses.values() 
+                              if r.get("status") == "answered" and r.get("week") == week_num])
+    
     percentage = (answered_count / total_questions) * 100 if total_questions > 0 else 0
     return answered_count, percentage
 
@@ -230,7 +467,8 @@ def search_responses(query):
                     "theme": response["theme"],
                     "question": response["question"],
                     "answer": response["answer"],
-                    "timestamp": response.get("timestamp", "")
+                    "timestamp": response.get("timestamp", ""),
+                    "expanded": response.get("expanded", True)
                 })
     
     # Sort by week and question index
@@ -241,13 +479,26 @@ def export_responses():
     """Export all responses as JSON"""
     return json.dumps(st.session_state.responses, indent=2)
 
+def generate_expansion_prompt(question, answer):
+    """Generate a prompt to encourage more detailed responses"""
+    prompts = [
+        f"You mentioned '{answer}'. Can you tell me more details about that?",
+        f"That's interesting! What else can you remember about {answer.split()[-1] if answer else 'that'}?",
+        f"I'd love to hear the full story about {answer.split()[0] if answer else 'that'}.",
+        f"What made {answer.split()[0] if answer else 'that'} so special?",
+        f"Can you describe that experience in more detail?",
+        f"What emotions come up when you think about {answer.split()[-1] if answer else 'that'}?",
+        f"What would someone else want to know about {answer.split()[0] if answer else 'that'}?"
+    ]
+    return random.choice(prompts)
+
 # Main app
-st.set_page_config(page_title="52 Weeks Memoir", page_icon="📖", layout="wide")
+st.set_page_config(page_title="Baby Milestone Journal", page_icon="👶", layout="wide")
 
 # Title and description
-st.title("📖 52 Weeks Memoir")
+st.title("👶 Baby Milestone Journal")
 st.markdown("""
-*Build a lifetime of memories with 7 questions per week*
+*Capture every precious moment from birth through toddler years*
 """)
 
 # User selection
@@ -256,64 +507,68 @@ if not st.session_state.user_type:
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("👨 Parent (Respond to Questions)", use_container_width=True):
+        if st.button("👩 Parent (Record Milestones)", use_container_width=True):
             st.session_state.user_type = "parent"
             st.session_state.current_user = "parent"
             st.rerun()
     
     with col2:
-        if st.button("👨‍👦 Child (Review & Guide Responses)", use_container_width=True):
-            st.session_state.user_type = "child"
-            st.session_state.current_user = "child"
+        if st.button("👨‍👩‍👧 Family (Review & Cherish)", use_container_width=True):
+            st.session_state.user_type = "family"
+            st.session_state.current_user = "family"
             st.rerun()
     
     st.info("Select your role to get started")
     
-    # Show sample week structure
-    st.markdown("### Sample Week Structure")
+    # Show sample structure
+    st.markdown("### Sample Milestone Structure")
     sample_data = []
-    for i in range(1, 4):
+    for i in range(1, 6):
         theme = get_week_theme(i)
-        sample_data.append({"Week": i, "Theme": theme, "Questions": "7 questions per theme"})
+        questions = get_week_questions(i)
+        sample_data.append({"Milestone": i, "Theme": theme, "Questions": f"{len(questions)} questions"})
     sample_df = pd.DataFrame(sample_data)
     st.dataframe(sample_df, use_container_width=True, hide_index=True)
 
 # Parent's view
 elif st.session_state.user_type == "parent":
-    st.subheader("Answer Weekly Questions")
+    st.subheader("Record Baby Milestones")
     
     # Week navigation
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col1:
-        if st.button("◀ Previous Week"):
+        if st.button("◀ Previous Milestone"):
             if st.session_state.view_week:
                 new_week = max(1, st.session_state.view_week - 1)
                 st.session_state.view_week = new_week
             else:
-                st.session_state.view_week = 51
+                st.session_state.view_week = len(week_themes) - 1
             st.session_state.current_question_index = 0
+            st.session_state.detail_prompt_active = False
             st.rerun()
     
     with col2:
         if st.session_state.view_week:
-            selected_week = st.number_input("Select week:", min_value=1, max_value=52, value=st.session_state.view_week)
+            selected_week = st.number_input("Select milestone:", min_value=1, max_value=len(week_themes), value=st.session_state.view_week)
         else:
-            selected_week = st.number_input("Select week:", min_value=1, max_value=52, value=1)
+            selected_week = st.number_input("Select milestone:", min_value=1, max_value=len(week_themes), value=1)
         
         if st.session_state.view_week != selected_week:
             st.session_state.view_week = selected_week
             st.session_state.current_question_index = 0
+            st.session_state.detail_prompt_active = False
             st.rerun()
     
     with col3:
-        if st.button("Next Week ▶"):
+        if st.button("Next Milestone ▶"):
             if st.session_state.view_week:
-                new_week = min(52, st.session_state.view_week + 1)
+                new_week = min(len(week_themes), st.session_state.view_week + 1)
                 st.session_state.view_week = new_week
             else:
                 st.session_state.view_week = 2
             st.session_state.current_question_index = 0
+            st.session_state.detail_prompt_active = False
             st.rerun()
     
     # Display current week
@@ -329,9 +584,9 @@ elif st.session_state.user_type == "parent":
     # Week progress
     answered, total = get_week_progress(week_number)
     st.progress(answered / total)
-    st.caption(f"Week Progress: {answered}/{total} questions answered")
+    st.caption(f"Milestone Progress: {answered}/{total} questions answered")
     
-    st.markdown(f"### Week {week_number}: {theme}")
+    st.markdown(f"### Milestone {week_number}: {theme}")
     
     # Question navigation within week
     question_col1, question_col2, question_col3 = st.columns([1, 3, 1])
@@ -339,47 +594,109 @@ elif st.session_state.user_type == "parent":
     with question_col1:
         if st.button("◀ Previous Question"):
             st.session_state.current_question_index = max(0, st.session_state.current_question_index - 1)
+            st.session_state.detail_prompt_active = False
             st.rerun()
     
     with question_col2:
-        question_index = st.slider("Question", 0, 6, st.session_state.current_question_index, 
+        question_index = st.slider("Question", 0, total-1, st.session_state.current_question_index, 
                                  format="Question %d")
         if st.session_state.current_question_index != question_index:
             st.session_state.current_question_index = question_index
+            st.session_state.detail_prompt_active = False
             st.rerun()
     
     with question_col3:
         if st.button("Next Question ▶"):
-            st.session_state.current_question_index = min(6, st.session_state.current_question_index + 1)
+            st.session_state.current_question_index = min(total-1, st.session_state.current_question_index + 1)
+            st.session_state.detail_prompt_active = False
             st.rerun()
     
     # Display current question
     current_question = get_current_question(week_number, st.session_state.current_question_index)
-    st.markdown(f"**Question {st.session_state.current_question_index + 1}/7:** {current_question}")
+    st.markdown(f"**Question {st.session_state.current_question_index + 1}/{total}:** {current_question}")
     
     # Check if already answered
     response_key = f"{week_number}_{st.session_state.current_question_index}"
+    st.session_state.current_response_key = response_key
+    
     if response_key in st.session_state.responses and st.session_state.responses[response_key].get("status") == "answered":
-        st.success("✅ You've already answered this question!")
-        st.markdown(f"**Your response:** {st.session_state.responses[response_key]['answer']}")
+        answer = st.session_state.responses[response_key]['answer']
+        word_count = len(answer.split())
+        expanded = st.session_state.responses[response_key].get('expanded', True)
         
-        if st.button("📝 Edit Response"):
+        st.success("✅ You've already answered this question!")
+        st.markdown(f"**Your response ({word_count} words):** {answer}")
+        
+        # Check if response needs more detail
+        if word_count < 15 and not expanded:
+            st.warning("📝 This response is quite brief. Would you like to add more details?")
+            expansion_prompt = generate_expansion_prompt(current_question, answer)
+            st.info(f"**Suggestion:** {expansion_prompt}")
+            
+            if st.button("Add More Details"):
+                st.session_state.detail_prompt_active = True
+                st.rerun()
+        elif st.button("📝 Edit Response"):
+            st.session_state.detail_prompt_active = False
             st.session_state.editing_week = week_number
             st.rerun()
     else:
-        # Show response form
-        with st.form("response_form"):
-            answer = st.text_area("Your response:", height=200, 
-                                value=st.session_state.responses.get(response_key, {}).get("answer", ""))
-            submitted = st.form_submit_button("Save Response")
+        # Show response form or detail prompt
+        if st.session_state.detail_prompt_active and response_key in st.session_state.responses:
+            # Show expansion form
+            existing_answer = st.session_state.responses[response_key]['answer']
+            expansion_prompt = generate_expansion_prompt(current_question, existing_answer)
             
-            if submitted:
-                save_response(week_number, st.session_state.current_question_index, answer)
-                st.success("Response saved!")
-                # Move to next question
-                if st.session_state.current_question_index < 6:
-                    st.session_state.current_question_index += 1
-                st.rerun()
+            st.warning("📝 Let's add more details to your response!")
+            st.info(f"**Suggestion:** {expansion_prompt}")
+            
+            with st.form("expansion_form"):
+                expanded_answer = st.text_area("Add more details:", 
+                                             value=existing_answer, 
+                                             height=200)
+                col1, col2 = st.columns(2)
+                with col1:
+                    expand_submitted = st.form_submit_button("Save Expanded Response")
+                with col2:
+                    cancel_expand = st.form_submit_button("Cancel")
+                
+                if expand_submitted:
+                    word_count = save_response(week_number, st.session_state.current_question_index, expanded_answer)
+                    st.session_state.detail_prompt_active = False
+                    st.success(f"Expanded response saved! ({word_count} words)")
+                    st.rerun()
+                elif cancel_expand:
+                    st.session_state.detail_prompt_active = False
+                    st.rerun()
+        else:
+            # Show regular response form
+            with st.form("response_form"):
+                answer = st.text_area("Your response:", height=200, 
+                                    value=st.session_state.responses.get(response_key, {}).get("answer", ""))
+                submitted = st.form_submit_button("Save Response")
+                
+                if submitted:
+                    word_count = save_response(week_number, st.session_state.current_question_index, answer)
+                    st.success(f"Response saved! ({word_count} words)")
+                    
+                    # If response is too brief, prompt for more details
+                    if word_count < 15:
+                        st.warning("📝 This response is quite brief. Would you like to add more details?")
+                        expansion_prompt = generate_expansion_prompt(current_question, answer)
+                        st.info(f"**Suggestion:** {expansion_prompt}")
+                        if st.button("Add More Details"):
+                            st.session_state.detail_prompt_active = True
+                            st.rerun()
+                        else:
+                            # Move to next question automatically after a brief pause
+                            if st.session_state.current_question_index < total - 1:
+                                st.session_state.current_question_index += 1
+                            st.rerun()
+                    else:
+                        # Move to next question
+                        if st.session_state.current_question_index < total - 1:
+                            st.session_state.current_question_index += 1
+                        st.rerun()
     
     # Question options
     col1, col2, col3 = st.columns(3)
@@ -387,8 +704,9 @@ elif st.session_state.user_type == "parent":
     with col1:
         if st.button("⏭️ Skip Question"):
             skip_question(week_number, st.session_state.current_question_index)
-            if st.session_state.current_question_index < 6:
+            if st.session_state.current_question_index < total - 1:
                 st.session_state.current_question_index += 1
+            st.session_state.detail_prompt_active = False
             st.rerun()
     
     with col2:
@@ -402,14 +720,15 @@ elif st.session_state.user_type == "parent":
         if st.button("➡️ Next Unanswered"):
             # Find next unanswered question
             found = False
-            for i in range(st.session_state.current_question_index + 1, 7):
+            for i in range(st.session_state.current_question_index + 1, total):
                 check_key = f"{week_number}_{i}"
                 if check_key not in st.session_state.responses or st.session_state.responses[check_key].get("status") != "answered":
                     st.session_state.current_question_index = i
                     found = True
                     break
             if not found:
-                st.info("All questions in this week are answered!")
+                st.info("All questions in this milestone are answered!")
+            st.session_state.detail_prompt_active = False
             st.rerun()
     
     # Navigation
@@ -419,137 +738,180 @@ elif st.session_state.user_type == "parent":
         st.session_state.editing_week = None
         st.session_state.view_week = None
         st.session_state.current_question_index = 0
+        st.session_state.detail_prompt_active = False
+        st.session_state.current_response_key = None
         st.rerun()
 
-# Child's view
-elif st.session_state.user_type == "child":
-    st.subheader("Review & Guide Responses")
+# Family view
+elif st.session_state.user_type == "family":
+    st.subheader("Cherish Baby Memories")
     
     # Overall stats
     answered_count, percentage = get_overall_progress()
     col1, col2, col3 = st.columns(3)
-    col1.metric("Questions Answered", answered_count, "364 total")
+    col1.metric("Memories Recorded", answered_count, f"{len(week_themes) * 7} total")
     col2.metric("Completion", f"{percentage:.1f}%", "Progress")
-    col3.metric("Questions Remaining", 364 - answered_count)
+    col3.metric("Memories Remaining", "Many precious moments", "to capture")
     
     # Progress bar
     st.progress(percentage / 100)
     
     # Tabs for different views
-    tab1, tab2, tab3, tab4 = st.tabs(["🔍 Search", "📚 By Week", "📊 Stats", "💾 Export"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🔍 Search", "📚 By Milestone", "📊 Stats", "💾 Export"])
     
     with tab1:
-        st.markdown("### 🔍 Search Responses")
-        search_query = st.text_input("Search by keyword, theme, or question:")
+        st.markdown("### 🔍 Search Memories")
+        search_query = st.text_input("Search by keyword, milestone, or memory:")
         
         if search_query:
             st.session_state.search_results = search_responses(search_query)
             st.markdown(f"### Search Results ({len(st.session_state.search_results)} found)")
             
             for result in st.session_state.search_results:
-                with st.expander(f"**Week {result['week']}: {result['theme']}**"):
+                with st.expander(f"**Milestone {result['week']}: {result['theme']}**"):
                     st.markdown(f"**Question:** {result['question']}")
-                    st.markdown(f"**Answer:** {result['answer']}")
+                    word_count = len(result['answer'].split())
+                    status = "✅ Detailed" if result.get('expanded', True) else "📝 Brief"
+                    st.markdown(f"**Memory ({word_count} words, {status}):** {result['answer']}")
                     if result['timestamp']:
-                        st.caption(f"Answered: {result['timestamp']}")
+                        st.caption(f"Recorded: {result['timestamp']}")
         else:
-            st.info("Enter a search term to find specific responses")
+            st.info("Enter a search term to find specific memories")
     
     with tab2:
-        st.markdown("### 📚 Responses by Week")
+        st.markdown("### 📚 Memories by Milestone")
         
-        # Week selector
-        selected_week = st.selectbox("Select week to view:", 
-                                   options=list(range(1, 53)), 
+        # Milestone selector
+        selected_week = st.selectbox("Select milestone to view:", 
+                                   options=list(range(1, len(week_themes) + 1)), 
                                    index=0)
         
         theme = get_week_theme(selected_week)
         questions = get_week_questions(selected_week)
         answered, total = get_week_progress(selected_week)
         
-        st.markdown(f"#### Week {selected_week}: {theme}")
+        st.markdown(f"#### Milestone {selected_week}: {theme}")
         st.progress(answered / total)
         st.caption(f"Progress: {answered}/{total} questions answered")
         
-        # Show all questions for this week
-        for i in range(7):
+        # Show all questions for this milestone
+        brief_count = 0
+        for i in range(len(questions)):
             response_key = f"{selected_week}_{i}"
             question = questions[i] if i < len(questions) else f"Question {i+1}"
             
-            with st.expander(f"**Q{i+1}: {question[:50]}...**"):
-                if response_key in st.session_state.responses and st.session_state.responses[response_key].get("status") == "answered":
+            if response_key in st.session_state.responses and st.session_state.responses[response_key].get("status") == "answered":
+                answer = st.session_state.responses[response_key]['answer']
+                word_count = len(answer.split())
+                expanded = st.session_state.responses[response_key].get('expanded', True)
+                status = "✅ Detailed" if expanded else "📝 Brief"
+                if not expanded:
+                    brief_count += 1
+                
+                with st.expander(f"**Q{i+1}: {question[:50]}... ({word_count} words, {status})**"):
                     st.markdown(f"**Question:** {question}")
-                    st.markdown(f"**Answer:** {st.session_state.responses[response_key]['answer']}")
-                    st.caption(f"Answered: {st.session_state.responses[response_key].get('timestamp', '')}")
-                else:
-                    st.info("Not yet answered")
+                    st.markdown(f"**Memory:** {answer}")
+                    st.caption(f"Recorded: {st.session_state.responses[response_key].get('timestamp', '')}")
+                    
+                    if not expanded:
+                        st.warning("This memory is brief and could use more details.")
+            else:
+                with st.expander(f"**Q{i+1}: {question[:50]}...**"):
+                    st.info("Not yet recorded")
                     
                     # Show if skipped or requested new
                     if selected_week in st.session_state.skipped_questions and i in st.session_state.skipped_questions[selected_week]:
                         st.caption("⏭️ Skipped")
                     elif selected_week in st.session_state.requested_new_questions and i in st.session_state.requested_new_questions[selected_week]:
                         st.caption("🔄 New question requested")
+        
+        if brief_count > 0:
+            st.warning(f"⚠️ {brief_count} memories in this milestone are brief and could use more details.")
     
     with tab3:
-        st.markdown("### 📊 Progress Statistics")
+        st.markdown("### 📊 Memory Statistics")
         
-        # Weekly completion chart
+        # Milestone completion chart
         weekly_data = []
-        for week in range(1, 53):
+        brief_responses = 0
+        total_responses = 0
+        
+        for week in range(1, len(week_themes) + 1):
             answered, total = get_week_progress(week)
-            weekly_data.append({"Week": week, "Completion": (answered / total) * 100 if total > 0 else 0})
+            weekly_data.append({"Milestone": week, "Completion": (answered / total) * 100 if total > 0 else 0})
+            
+            # Count brief responses
+            for i in range(total):
+                response_key = f"{week}_{i}"
+                if response_key in st.session_state.responses and st.session_state.responses[response_key].get("status") == "answered":
+                    total_responses += 1
+                    if not st.session_state.responses[response_key].get("expanded", True):
+                        brief_responses += 1
         
         weekly_df = pd.DataFrame(weekly_data)
-        st.markdown("**Weekly Completion**")
-        st.bar_chart(weekly_df.set_index("Week"))
+        st.markdown("**Milestone Completion**")
+        st.bar_chart(weekly_df.set_index("Milestone"))
         
-        # Theme completion
-        st.markdown("**Theme Sections**")
-        theme_sections = [
-            ("Foundation", 1, 10),
-            ("Growth", 11, 20),
-            ("Experiences", 21, 30),
-            ("Wisdom", 31, 40),
-            ("Reflections", 41, 52)
+        # Brief responses stats
+        if total_responses > 0:
+            brief_percentage = (brief_responses / total_responses) * 100
+            st.markdown(f"**Memory Quality:** {brief_responses}/{total_responses} ({brief_percentage:.1f}%) memories are brief")
+            if brief_responses > 0:
+                st.warning("Consider encouraging more detailed memories for better baby book quality.")
+        
+        # Age group completion
+        st.markdown("**Age Group Progress**")
+        age_groups = [
+            ("Newborn (0-1 month)", 1, 4),
+            ("Infant (1-6 months)", 5, 10),
+            ("Baby (6-12 months)", 11, 17),
+            ("Toddler (12-36 months)", 18, len(week_themes))
         ]
         
         section_data = []
-        for section_name, start_week, end_week in theme_sections:
-            section_total = (end_week - start_week + 1) * 7
+        for section_name, start_week, end_week in age_groups:
+            section_total = 0
             section_answered = 0
             for week in range(start_week, end_week + 1):
-                answered, _ = get_week_progress(week)
+                answered, total = get_week_progress(week)
+                section_total += total
                 section_answered += answered
             section_data.append({
-                "Section": section_name,
+                "Age Group": section_name,
                 "Completion": (section_answered / section_total) * 100 if section_total > 0 else 0
             })
         
         section_df = pd.DataFrame(section_data)
-        st.bar_chart(section_df.set_index("Section"))
+        st.bar_chart(section_df.set_index("Age Group"))
     
     with tab4:
-        st.markdown("### 💾 Export Data")
-        st.markdown("Download all responses as a JSON file:")
+        st.markdown("### 💾 Export Baby Book")
+        st.markdown("Download all memories as a JSON file:")
         
         # Create download button
         json_data = export_responses()
         st.download_button(
-            label="📥 Download All Responses (JSON)",
+            label="📥 Download Baby Book (JSON)",
             data=json_data,
-            file_name="memoir_responses.json",
+            file_name="baby_milestone_book.json",
             mime="application/json"
         )
         
-        st.markdown("### 📋 Summary")
+        st.markdown("### 📋 Baby Book Summary")
         if st.session_state.responses:
             total_words = sum(len(response.get("answer", "").split()) 
                             for response in st.session_state.responses.values() 
                             if response.get("status") == "answered")
-            st.metric("Total Words Written", f"{total_words:,}")
+            st.metric("Total Words Recorded", f"{total_words:,}")
             
-            # Show sample weeks
-            st.markdown("**Sample Completed Weeks:**")
+            # Count brief responses
+            brief_count = sum(1 for response in st.session_state.responses.values() 
+                            if response.get("status") == "answered" and not response.get("expanded", True))
+            if brief_count > 0:
+                st.metric("Brief Memories", f"{brief_count}", "Consider expanding")
+            
+            # Show sample milestones
+            st.markdown("**Sample Recorded Milestones:**")
             completed_weeks = set()
             for response_key in st.session_state.responses:
                 if st.session_state.responses[response_key].get("status") == "answered":
@@ -559,9 +921,9 @@ elif st.session_state.user_type == "child":
             completed_weeks = sorted(list(completed_weeks))[:5]  # Show first 5
             for week in completed_weeks:
                 theme = get_week_theme(week)
-                st.markdown(f"**Week {week}: {theme}**")
+                st.markdown(f"**Milestone {week}: {theme}**")
         else:
-            st.info("No responses to export yet")
+            st.info("No memories recorded yet")
     
     # Navigation
     st.markdown("---")
@@ -571,4 +933,4 @@ elif st.session_state.user_type == "child":
 
 # Footer
 st.markdown("---")
-st.caption("52 Weeks Memoir - 7 questions per week, 364 memories to preserve")
+st.caption("👶 Baby Milestone Journal - Capturing precious moments from birth to toddler years")
