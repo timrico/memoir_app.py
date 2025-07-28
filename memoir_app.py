@@ -3,8 +3,6 @@ import pandas as pd
 import random
 from datetime import datetime, timedelta
 from collections import defaultdict
-import matplotlib.pyplot as plt
-import numpy as np
 
 # Initialize session state
 if 'user_type' not in st.session_state:
@@ -396,14 +394,10 @@ elif st.session_state.user_type == "son":
         monthly_counts = df_viz.groupby('Month').size().reset_index(name='Count')
         monthly_counts['Month'] = monthly_counts['Month'].astype(str)
         
-        # Simple bar chart using matplotlib
-        fig, ax = plt.subplots(figsize=(10, 4))
-        ax.bar(monthly_counts['Month'], monthly_counts['Count'])
-        ax.set_title('Responses per Month')
-        ax.set_xlabel('Month')
-        ax.set_ylabel('Number of Responses')
-        plt.xticks(rotation=45)
-        st.pyplot(fig)
+        # Simple text-based visualization
+        st.markdown("**Responses per Month:**")
+        for _, row in monthly_counts.iterrows():
+            st.text(f"{row['Month']}: {row['Count']} responses")
     
     # Navigation
     st.markdown("---")
