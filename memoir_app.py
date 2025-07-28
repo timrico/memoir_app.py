@@ -276,13 +276,13 @@ if not st.session_state.user_type:
         if st.button("👨 Father (Respond to Questions)"):
             st.session_state.user_type = "father"
             st.session_state.current_user = "father"
-            st.experimental_rerun()
+            st.rerun()
     
     with col2:
         if st.button("👨‍👦 Son (Review & Guide Responses)"):
             st.session_state.user_type = "son"
             st.session_state.current_user = "son"
-            st.experimental_rerun()
+            st.rerun()
     
     st.info("Select your role to get started")
 
@@ -303,7 +303,7 @@ elif st.session_state.user_type == "father":
         
         if st.button("📝 Edit Response"):
             st.session_state.responses[today]["status"] = "editing"
-            st.experimental_rerun()
+            st.rerun()
     else:
         # Show response form
         with st.form("response_form"):
@@ -314,13 +314,13 @@ elif st.session_state.user_type == "father":
             if submitted:
                 save_response(today, answer)
                 st.success("Response saved!")
-                st.experimental_rerun()
+                st.rerun()
     
     # Navigation
     st.markdown("---")
     if st.button("⬅️ Back to Role Selection"):
         st.session_state.user_type = None
-        st.experimental_rerun()
+        st.rerun()
 
 # Son's view
 elif st.session_state.user_type == "son":
@@ -403,7 +403,7 @@ elif st.session_state.user_type == "son":
     st.markdown("---")
     if st.button("⬅️ Back to Role Selection"):
         st.session_state.user_type = None
-        st.experimental_rerun()
+        st.rerun()
 
 # Footer
 st.markdown("---")
