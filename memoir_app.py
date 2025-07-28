@@ -298,7 +298,7 @@ def get_monthly_stats():
             try:
                 date_obj = datetime.strptime(date_str, "%Y-%m-%d")
                 month_key = date_obj.strftime("%Y-%m")
-                if month_key not in monthly_
+                if month_key not in monthly_data:
                     monthly_data[month_key] = 0
                 monthly_data[month_key] += 1
             except ValueError:
@@ -536,13 +536,13 @@ elif st.session_state.user_type == "child":
                         # Get start of week (Monday)
                         week_start = date_obj - timedelta(days=date_obj.weekday())
                         week_key = week_start.strftime("%Y-%m-%d")
-                        if week_key not in weekly_
+                        if week_key not in weekly_data:
                             weekly_data[week_key] = 0
                         weekly_data[week_key] += 1
                     except ValueError:
                         pass
             
-            if weekly_
+            if weekly_data:
                 weekly_df = pd.DataFrame(list(weekly_data.items()), columns=["Week", "Responses"])
                 weekly_df = weekly_df.sort_values("Week").tail(8)
                 st.line_chart(weekly_df.set_index("Week"))
